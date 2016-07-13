@@ -1,6 +1,8 @@
 source https://www.nuget.org/api/v2
 nuget EntityFramework
 nuget FAKE
+nuget Linq2Rest
+nuget Newtonsoft.Json
 nuget Node.js
 nuget Npgsql.EntityFramework
 nuget Npm.js

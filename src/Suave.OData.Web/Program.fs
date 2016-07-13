@@ -1,10 +1,17 @@
-// Learn more about F# at http://fsharp.org
-// See the 'F# Tutorial' project for more help.
-open Suave.OData.EF
+namespace Suave.OData.Web
 
-[<EntryPoint>]
-let main argv =
+open Suave.OData.EF
+open Suave
+open Suave.Web
+open Suave.Http
+open Suave.Successful
+open Suave.Filters
+open Suave.Operators
+open Suave.OData.Core
+
+module Main =
+  [<EntryPoint>]
+  let main argv =
     let db = new Db()
-    db.People
-    |> Seq.iter (fun p -> printfn "%s,%s" p.FirstName p.LastName)
-    0 // return an integer exit code
+    startWebServer defaultConfig (path "/people" >=> ODataFilter db.People)
+    0
