@@ -1,2 +1,8 @@
 source https://www.nuget.org/api/v2
+nuget EntityFramework
 nuget FAKE
+nuget Node.js
+nuget Npgsql.EntityFramework
+nuget Npm.js
+nuget Suave
+nuget System.ComponentModel.Annotations
