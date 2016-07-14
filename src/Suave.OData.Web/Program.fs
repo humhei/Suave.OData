@@ -13,5 +13,10 @@ module Main =
   [<EntryPoint>]
   let main argv =
     let db = new Db()
-    startWebServer defaultConfig (path "/people" >=> ODataFilter db.People)
+    let people = {
+      Name = "people"
+      DbSet = db.People
+      SaveChanges = db.SaveChangesAsync
+    }
+    startWebServer defaultConfig (OData.CRUD people)
     0
