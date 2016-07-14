@@ -2,12 +2,16 @@ namespace Suave.OData.EF
 open System.ComponentModel.DataAnnotations
 open System.ComponentModel.DataAnnotations.Schema
 
-[<Table("people",Schema="public")>]
 [<AllowNullLiteral>]
-type People () =
+type Entity () =
   [<Key>]
   [<Column("id")>]
   member val ID = 0 with get, set
+
+[<AllowNullLiteral>]
+[<Table("people",Schema="public")>]
+type People () =
+  inherit Entity()
   [<Column("firstName")>]
   [<Required>]
   member val FirstName = "" with get, set

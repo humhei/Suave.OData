@@ -20,7 +20,7 @@ module Types =
     Name : string
     Entities : IEnumerable<'a>
     Add : 'a -> Async<int>
-    Update : 'a -> Async<int>
+    Update : int -> 'a -> Async<Choice<'a, bool , System.Exception>>
     FindById : int -> Async<'a option>
     DeleteById : int -> Async<'a option>
   }
@@ -42,20 +42,19 @@ module OData =
     return! JSON OK filteredEntities ctx
   }
 
-  let CreateOrUpdate action (ctx : HttpContext) = async {
-    let entity = getResourceFromReq ctx.request
+  let private validate entity =
     let vctx = new ValidationContext(entity)
     let results = new List<ValidationResult>()
     let isValid = Validator.TryValidateObject(entity, vctx, results)
+    (isValid, results)
+
+  let Create create (ctx : HttpContext) = async {
+    let entity = getResourceFromReq ctx.request
+    let isValid, results = validate entity
     if isValid then
       try
-        match action with
-        | Insert action ->
-          let! _ = action entity
-          return! JSON CREATED entity ctx
-        | Update action ->
-          let! _ = action entity
-          return! JSON OK entity ctx
+        let! _ = create entity
+        return! JSON CREATED entity ctx
       with
       | ex -> return! JSON INTERNAL_ERROR ex ctx
     else
@@ -73,6 +72,23 @@ module OData =
     | ex -> return! JSON INTERNAL_ERROR ex ctx
   }
 
+  let UpdateById update id (ctx : HttpContext) = async {
+    try
+      let entity = getResourceFromReq ctx.request
+      let isValid, results = validate entity
+      if isValid then
+        let! entity = update id entity
+        match entity with
+        | Choice1Of3 entity ->
+          return! JSON OK entity ctx
+        | Choice2Of3 _ -> return! NOT_FOUND "" ctx
+        | Choice3Of3 ex -> return! JSON INTERNAL_ERROR ex ctx
+      else
+        return! JSON BAD_REQUEST results ctx
+    with
+    | ex -> return! JSON INTERNAL_ERROR ex ctx
+  }
+
   let CRUD resource (ctx : HttpContext) = async {
     let odata =
       let resourcePath = "/" + resource.Name
@@ -80,10 +96,10 @@ module OData =
       choose [
         path resourcePath >=> choose [
           GET >=> Filter resource.Entities
-          POST >=> CreateOrUpdate (Insert resource.Add)
-          PUT >=>  CreateOrUpdate (Update resource.Update)
+          POST >=> Create resource.Add
         ]
         GET >=> pathScan resourceIdPath (FindOrDeleteById resource.FindById)
+        PUT >=> pathScan resourceIdPath (UpdateById resource.Update)
         DELETE >=> pathScan resourceIdPath (FindOrDeleteById resource.DeleteById)
       ]
     return! odata ctx
