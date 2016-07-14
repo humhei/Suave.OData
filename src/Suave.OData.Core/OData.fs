@@ -21,7 +21,8 @@ module Types =
     Entities : IEnumerable<'a>
     Add : 'a -> Async<int>
     Update : 'a -> Async<int>
-    Find : int -> Async<'a option>
+    FindById : int -> Async<'a option>
+    DeleteById : int -> Async<'a option>
   }
 
   type InsertOrUpdate<'a> =
@@ -61,15 +62,29 @@ module OData =
       return! JSON BAD_REQUEST results ctx
   }
 
+  let FindOrDeleteById f id (ctx : HttpContext) = async {
+    try
+      let! entity = f id
+      match entity with
+      | Some entity ->
+        return! JSON OK entity ctx
+      | _ -> return! NOT_FOUND "" ctx
+    with
+    | ex -> return! JSON INTERNAL_ERROR ex ctx
+  }
+
   let CRUD resource (ctx : HttpContext) = async {
     let odata =
       let resourcePath = "/" + resource.Name
+      let resourceIdPath = new PrintfFormat<(int -> string),unit,string,string,int>(resourcePath + "(%d)")
       choose [
         path resourcePath >=> choose [
           GET >=> Filter resource.Entities
           POST >=> CreateOrUpdate (Insert resource.Add)
           PUT >=>  CreateOrUpdate (Update resource.Update)
         ]
+        GET >=> pathScan resourceIdPath (FindOrDeleteById resource.FindById)
+        DELETE >=> pathScan resourceIdPath (FindOrDeleteById resource.DeleteById)
       ]
     return! odata ctx
   }

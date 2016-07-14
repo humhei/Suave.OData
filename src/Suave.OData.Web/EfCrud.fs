@@ -9,25 +9,37 @@ module EfCrud =
     add entity |> ignore
     db.SaveChangesAsync() |> Async.AwaitTask
 
-  let inline
-    updateEntity<'a when 'a : not struct and 'a : equality and 'a : null>
-     (db : DbContext) (dbSet : DbSet<'a>) entity =
-        dbSet.Attach(entity) |> ignore
-        db.Entry(entity).State <- EntityState.Modified
-        db.SaveChangesAsync() |> Async.AwaitTask
+  let updateEntity (db : DbContext) attach entity =
+    db.Entry(entity).State <- EntityState.Modified
+    db.SaveChangesAsync() |> Async.AwaitTask
 
-  let inline
-    findEntityById<'a when 'a : not struct and 'a : equality and 'a : null>
-      (dbSet : DbSet<'a>) (id : int) = async {
-        try
-          let! entity = dbSet.FindAsync(id) |> Async.AwaitTask
-          if entity = null then
-            return None
-          else
-            return Some(entity)
-        with
-        | _ -> return None
-      }
+  let findEntityById find (id : int) = async {
+    try
+      let! entity = find id |> Async.AwaitTask
+      if isNull entity then
+        return None
+      else
+        return Some(entity)
+    with
+    | ex ->
+      printfn "%A" ex
+      return None
+  }
+
+  let deleteEntityById (db : DbContext) find remove (id : int) = async {
+      try
+        let! entity = find id |> Async.AwaitTask
+        if isNull entity then
+          return None
+        else
+          remove entity |> ignore
+          let! _ = db.SaveChangesAsync() |> Async.AwaitTask
+          return Some(entity)
+      with
+      | ex ->
+        printfn "%A" ex
+        return None
+    }
 
   let inline
     resource<'a when 'a : not struct and 'a : equality and 'a : null>
@@ -36,6 +48,7 @@ module EfCrud =
           Name = name
           Entities = dbSet
           Add = addEntity db dbSet.Add
-          Update = updateEntity db dbSet
-          Find = findEntityById dbSet
+          Update = updateEntity db dbSet.Attach
+          FindById = findEntityById dbSet.FindAsync
+          DeleteById = deleteEntityById db dbSet.FindAsync dbSet.Remove
         }

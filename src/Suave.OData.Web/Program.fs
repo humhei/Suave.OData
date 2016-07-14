@@ -14,6 +14,6 @@ module Main =
   [<EntryPoint>]
   let main argv =
     let db = new Db()
-    let app = resource db "people" db.People |> OData.CRUD
+    let app = resource db "people" (db.People) |> OData.CRUD
     startWebServer defaultConfig app
     0
