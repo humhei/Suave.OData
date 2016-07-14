@@ -3,6 +3,7 @@ open System.ComponentModel.DataAnnotations
 open System.ComponentModel.DataAnnotations.Schema
 
 [<Table("people",Schema="public")>]
+[<AllowNullLiteral>]
 type People () =
   [<Key>]
   [<Column("id")>]
