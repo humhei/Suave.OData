@@ -1,6 +1,7 @@
 namespace Suave.OData.Web
 open System.Data.Entity
 open Suave.OData.Core
+open System.Data.Entity.Migrations
 
 [<AutoOpen>]
 module EfCrud =
@@ -9,9 +10,11 @@ module EfCrud =
     add entity |> ignore
     db.SaveChangesAsync() |> Async.AwaitTask
 
-  let updateEntity (db : DbContext) attach entity =
-    db.Entry(entity).State <- EntityState.Modified
-    db.SaveChangesAsync() |> Async.AwaitTask
+  let inline
+    updateEntity<'a when 'a : not struct and 'a : equality and 'a : null>
+      (db : DbContext) (dbSet : DbSet<'a>) (entity: 'a) =
+        dbSet.AddOrUpdate(entity) |> ignore
+        db.SaveChangesAsync() |> Async.AwaitTask
 
   let findEntityById find (id : int) = async {
     try
@@ -48,7 +51,7 @@ module EfCrud =
           Name = name
           Entities = dbSet
           Add = addEntity db dbSet.Add
-          Update = updateEntity db dbSet.Attach
+          Update = updateEntity db dbSet
           FindById = findEntityById dbSet.FindAsync
           DeleteById = deleteEntityById db dbSet.FindAsync dbSet.Remove
         }
