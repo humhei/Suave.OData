@@ -3,10 +3,6 @@ namespace Suave.OData.Web
 open Suave.OData.EF
 open Suave
 open Suave.Web
-open Suave.Http
-open Suave.Successful
-open Suave.Filters
-open Suave.Operators
 open System.Data.Entity
 open Suave.OData.Core
 

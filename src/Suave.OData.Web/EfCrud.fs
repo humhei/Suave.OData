@@ -53,19 +53,19 @@ module EfCrud =
   }
 
 
-  let inline
-    resource<'a when 'a : not struct and 'a : equality and 'a : null and 'a :> Entity>
-      db name (dbSet : DbSet<'a>) =
+  let resource<'a when 'a : not struct and
+        'a : equality and
+        'a : null and 'a :> Entity> db name (dbSet : DbSet<'a>) =
 
-        let update id (entity : 'a) =
-          entity.ID <- id
-          dbSet.AddOrUpdate entity
+    let update id (entity : 'a) =
+      entity.ID <- id
+      dbSet.AddOrUpdate entity
 
-        {
-          Name = name
-          Entities = dbSet
-          Add = addEntity db dbSet.Add
-          Update = updateEntity db dbSet.FindAsync update
-          FindById = findEntityById dbSet.FindAsync
-          DeleteById = deleteEntityById db dbSet.FindAsync dbSet.Remove
-        }
+    {
+      Name = name
+      Entities = dbSet
+      Add = addEntity db dbSet.Add
+      Update = updateEntity db dbSet.FindAsync update
+      FindById = findEntityById dbSet.FindAsync
+      DeleteById = deleteEntityById db dbSet.FindAsync dbSet.Remove
+    }
