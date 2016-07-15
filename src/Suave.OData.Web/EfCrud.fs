@@ -11,12 +11,6 @@ module EfCrud =
     add entity |> ignore
     db.SaveChangesAsync() |> Async.AwaitTask
 
-  let inline
-    updateEntity<'a when 'a : not struct and 'a : equality and 'a : null>
-      (db : DbContext) (dbSet : DbSet<'a>) (entity: 'a) =
-        dbSet.AddOrUpdate(entity) |> ignore
-        db.SaveChangesAsync() |> Async.AwaitTask
-
   let findEntityById find (id : int) = async {
     try
       let! entity = find id |> Async.AwaitTask
@@ -45,14 +39,13 @@ module EfCrud =
         return None
     }
 
-  let updateEntity<'a when 'a :> Entity> (db : DbContext) find update id (entity:'a) = async {
+  let updateEntity(db : DbContext) find update id entity = async {
     try
       let! oldEntity = find id |> Async.AwaitTask
       if isNull oldEntity then
         return Choice2Of3 true
       else
-        entity.ID <- id
-        update entity
+        update id entity
         let! _ = db.SaveChangesAsync() |> Async.AwaitTask
         return Choice1Of3 entity
     with
@@ -63,11 +56,16 @@ module EfCrud =
   let inline
     resource<'a when 'a : not struct and 'a : equality and 'a : null and 'a :> Entity>
       db name (dbSet : DbSet<'a>) =
+
+        let update id (entity : 'a) =
+          entity.ID <- id
+          dbSet.AddOrUpdate entity
+
         {
           Name = name
           Entities = dbSet
           Add = addEntity db dbSet.Add
-          Update = updateEntity db dbSet.FindAsync dbSet.AddOrUpdate
+          Update = updateEntity db dbSet.FindAsync update
           FindById = findEntityById dbSet.FindAsync
           DeleteById = deleteEntityById db dbSet.FindAsync dbSet.Remove
         }
