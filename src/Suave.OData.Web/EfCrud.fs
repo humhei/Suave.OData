@@ -7,9 +7,12 @@ open System.Data.Entity.Migrations
 [<AutoOpen>]
 module EfCrud =
 
-  let addEntity (db : DbContext) add entity =
+  let addEntity (db : DbContext) add entity = async {
     add entity |> ignore
-    db.SaveChangesAsync() |> Async.AwaitTask
+    let! _ = db.SaveChangesAsync() |> Async.AwaitTask
+    return entity
+  }
+
 
   let findEntityById find (id : int) = async {
     try

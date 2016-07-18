@@ -1,7 +1,7 @@
 namespace Suave.OData.Core
+
 open Linq2Rest.Parser
 open System.Collections.Specialized
-open System.Linq
 open Suave
 open Suave.Http
 open Suave.Filters
@@ -9,7 +9,6 @@ open Suave.Operators
 open Suave.Successful
 open Suave.ServerErrors
 open Suave.RequestErrors
-open System.Threading.Tasks
 open System.Collections.Generic
 open System.ComponentModel.DataAnnotations
 open Json
@@ -19,15 +18,11 @@ module Types =
   type Resource<'a> = {
     Name : string
     Entities : IEnumerable<'a>
-    Add : 'a -> Async<int>
+    Add : 'a -> Async<'a>
     Update : int -> 'a -> Async<Choice<'a, bool , System.Exception>>
     FindById : int -> Async<'a option>
     DeleteById : int -> Async<'a option>
   }
-
-  type InsertOrUpdate<'a> =
-  | Insert of ('a -> Async<int>)
-  | Update of ('a -> Async<int>)
 
 [<RequireQualifiedAccess>]
 module OData =
@@ -48,12 +43,12 @@ module OData =
     let isValid = Validator.TryValidateObject(entity, vctx, results)
     (isValid, results)
 
-  let Create create (ctx : HttpContext) = async {
+  let Create add (ctx : HttpContext) = async {
     let entity = getResourceFromReq ctx.request
     let isValid, results = validate entity
     if isValid then
       try
-        let! _ = create entity
+        let! entity = add entity
         return! JSON CREATED entity ctx
       with
       | ex -> return! JSON INTERNAL_ERROR ex ctx
@@ -61,7 +56,7 @@ module OData =
       return! JSON BAD_REQUEST results ctx
   }
 
-  let FindOrDeleteById f id (ctx : HttpContext) = async {
+  let FindById f id (ctx : HttpContext) = async {
     try
       let! entity = f id
       match entity with
@@ -71,6 +66,7 @@ module OData =
     with
     | ex -> return! JSON INTERNAL_ERROR ex ctx
   }
+  let DeleteById = FindById
 
   let UpdateById update id (ctx : HttpContext) = async {
     try
@@ -92,15 +88,17 @@ module OData =
   let CRUD resource (ctx : HttpContext) = async {
     let odata =
       let resourcePath = "/" + resource.Name
-      let resourceIdPath = new PrintfFormat<(int -> string),unit,string,string,int>(resourcePath + "(%d)")
+      let resourceIdPath =
+        new PrintfFormat<(int -> string),unit,string,string,int>
+          (resourcePath + "(%d)")
       choose [
         path resourcePath >=> choose [
           GET >=> Filter resource.Entities
           POST >=> Create resource.Add
         ]
-        GET >=> pathScan resourceIdPath (FindOrDeleteById resource.FindById)
+        GET >=> pathScan resourceIdPath (FindById resource.FindById)
         PUT >=> pathScan resourceIdPath (UpdateById resource.Update)
-        DELETE >=> pathScan resourceIdPath (FindOrDeleteById resource.DeleteById)
+        DELETE >=> pathScan resourceIdPath (DeleteById resource.DeleteById)
       ]
     return! odata ctx
   }
