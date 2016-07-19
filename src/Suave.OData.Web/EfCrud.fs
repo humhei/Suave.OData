@@ -8,11 +8,15 @@ open System.Data.Entity.Migrations
 module EfCrud =
 
   let addEntity (db : DbContext) add entity = async {
-    add entity |> ignore
-    let! _ = db.SaveChangesAsync() |> Async.AwaitTask
-    return entity
+    try
+      add entity |> ignore
+      let! _ = db.SaveChangesAsync() |> Async.AwaitTask
+      return Some(entity)
+    with
+    | ex ->
+      printfn "%A" ex
+      return None
   }
-
 
   let findEntityById find (id : int) = async {
     try
@@ -42,17 +46,15 @@ module EfCrud =
         return None
     }
 
-  let updateEntity(db : DbContext) find update id entity = async {
+  let updateEntity(db : DbContext) update id entity = async {
     try
-      let! oldEntity = find id |> Async.AwaitTask
-      if isNull oldEntity then
-        return Choice2Of3 true
-      else
-        update id entity
-        let! _ = db.SaveChangesAsync() |> Async.AwaitTask
-        return Choice1Of3 entity
+      update id entity
+      let! _ = db.SaveChangesAsync() |> Async.AwaitTask
+      return Some entity
     with
-    | ex -> return Choice3Of3 ex
+    | ex ->
+      printf "%A" ex
+      return None
   }
 
 
@@ -63,12 +65,11 @@ module EfCrud =
     let update id (entity : 'a) =
       entity.ID <- id
       dbSet.AddOrUpdate entity
-
     {
       Name = name
       Entities = dbSet
       Add = addEntity db dbSet.Add
-      Update = updateEntity db dbSet.FindAsync update
+      UpdateById = updateEntity db update
       FindById = findEntityById dbSet.FindAsync
       DeleteById = deleteEntityById db dbSet.FindAsync dbSet.Remove
     }

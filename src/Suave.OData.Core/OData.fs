@@ -18,8 +18,8 @@ module Types =
   type Resource<'a> = {
     Name : string
     Entities : IEnumerable<'a>
-    Add : 'a -> Async<'a>
-    Update : int -> 'a -> Async<Choice<'a, bool , System.Exception>>
+    Add : 'a -> Async<'a option>
+    UpdateById : int -> 'a -> Async<'a option>
     FindById : int -> Async<'a option>
     DeleteById : int -> Async<'a option>
   }
@@ -47,42 +47,37 @@ module OData =
     let entity = getResourceFromReq ctx.request
     let isValid, results = validate entity
     if isValid then
-      try
-        let! entity = add entity
-        return! JSON CREATED entity ctx
-      with
-      | ex -> return! JSON INTERNAL_ERROR ex ctx
+      let! addResult = add entity
+      match addResult with
+      | Some entity -> return! JSON CREATED entity ctx
+      | None -> return! INTERNAL_ERROR "" ctx
     else
       return! JSON BAD_REQUEST results ctx
   }
 
   let FindById f id (ctx : HttpContext) = async {
-    try
-      let! entity = f id
-      match entity with
-      | Some entity ->
-        return! JSON OK entity ctx
-      | _ -> return! NOT_FOUND "" ctx
-    with
-    | ex -> return! JSON INTERNAL_ERROR ex ctx
+    let! findResult = f id
+    match findResult with
+    | Some entity ->
+      return! JSON OK entity ctx
+    | _ -> return! NOT_FOUND "" ctx
   }
   let DeleteById = FindById
 
-  let UpdateById update id (ctx : HttpContext) = async {
-    try
-      let entity = getResourceFromReq ctx.request
-      let isValid, results = validate entity
-      if isValid then
-        let! entity = update id entity
-        match entity with
-        | Choice1Of3 entity ->
-          return! JSON OK entity ctx
-        | Choice2Of3 _ -> return! NOT_FOUND "" ctx
-        | Choice3Of3 ex -> return! JSON INTERNAL_ERROR ex ctx
-      else
-        return! JSON BAD_REQUEST results ctx
-    with
-    | ex -> return! JSON INTERNAL_ERROR ex ctx
+  let UpdateById find update id (ctx : HttpContext) = async {
+    let entity = getResourceFromReq ctx.request
+    let isValid, results = validate entity
+    if isValid then
+      let! findResult = find id
+      match findResult with
+      | Some _ ->
+        let! updateResult = update id entity
+        match updateResult with
+        | Some entity -> return! JSON OK entity ctx
+        | _ -> return! INTERNAL_ERROR "" ctx
+      | _ -> return! NOT_FOUND "" ctx
+    else
+      return! JSON BAD_REQUEST results ctx
   }
 
   let CRUD resource (ctx : HttpContext) = async {
@@ -97,7 +92,9 @@ module OData =
           POST >=> Create resource.Add
         ]
         GET >=> pathScan resourceIdPath (FindById resource.FindById)
-        PUT >=> pathScan resourceIdPath (UpdateById resource.Update)
+        PUT >=>
+          pathScan resourceIdPath 
+            (UpdateById resource.FindById resource.UpdateById)
         DELETE >=> pathScan resourceIdPath (DeleteById resource.DeleteById)
       ]
     return! odata ctx
