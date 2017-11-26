@@ -1,0 +1,23 @@
+{
+
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Test",
+            "request": "launch",
+            "preLaunchTask": "Build Test",
+            "type": "coreclr",            
+            "program": "${workspaceRoot}/Suave.OData.LiteDB.Tests/bin/Debug/netcoreapp2.0/Suave.OData.LiteDB.Tests.dll",
+            "args": [],
+            "cwd": "${workspaceRoot}/Suave.OData.LiteDB.Tests",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        }
+    ]
+}

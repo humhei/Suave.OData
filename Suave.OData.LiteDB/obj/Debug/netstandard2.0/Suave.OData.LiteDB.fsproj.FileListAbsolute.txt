@@ -1,0 +1,5 @@
+d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB\bin\Debug\netstandard2.0\Suave.OData.LiteDB.deps.json
+d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB\bin\Debug\netstandard2.0\Suave.OData.LiteDB.dll
+d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB\bin\Debug\netstandard2.0\Suave.OData.LiteDB.pdb
+d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB\obj\Debug\netstandard2.0\Suave.OData.LiteDB.dll
+d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB\obj\Debug\netstandard2.0\Suave.OData.LiteDB.pdb

@@ -1,0 +1,19 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Test",
+            "command": "dotnet",
+            "group": "build",
+            "args": [
+                "msbuild",
+                "Suave.OData.LiteDB.Tests/Suave.OData.LiteDB.Tests.fsproj"
+            ],
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        }
+    
+    ]
+}

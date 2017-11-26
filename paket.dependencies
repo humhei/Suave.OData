@@ -1,10 +1,7 @@
 source https://www.nuget.org/api/v2
-nuget EntityFramework
-nuget FAKE
-nuget Linq2Rest
-nuget Newtonsoft.Json
-nuget Node.js
-nuget Npgsql.EntityFramework
-nuget Npm.js
 nuget Suave
-nuget System.ComponentModel.Annotations
+nuget FParsec
+nuget Suave.Testing
+nuget Expecto
+nuget LiteDb.FSharp
+clitool Microsoft.DotNet.Watcher.Tools
