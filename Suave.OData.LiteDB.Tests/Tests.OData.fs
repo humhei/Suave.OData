@@ -61,5 +61,5 @@ let ODataTests =
         runWithConfig<| odataRouter()
           |>reqQuery GET "odata/company" "$select=Name"
           |>ofJson<list<string>>
-      Expect.equal res ["test";"Hello"] "OData Filter EntityTest Corrently"                    
+      Expect.equal res ["test";"Hello"] "OData Filter EntityTest Corrently "                    
   ]
