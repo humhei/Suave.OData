@@ -1,9 +1,0 @@
-d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB.Tests\bin\Debug\netcoreapp2.0\Suave.OData.LiteDB.Tests.deps.json
-d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB.Tests\bin\Debug\netcoreapp2.0\Suave.OData.LiteDB.Tests.runtimeconfig.json
-d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB.Tests\bin\Debug\netcoreapp2.0\Suave.OData.LiteDB.Tests.runtimeconfig.dev.json
-d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB.Tests\bin\Debug\netcoreapp2.0\Suave.OData.LiteDB.Tests.dll
-d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB.Tests\bin\Debug\netcoreapp2.0\Suave.OData.LiteDB.Tests.pdb
-d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB.Tests\bin\Debug\netcoreapp2.0\Suave.OData.LiteDB.dll
-d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB.Tests\bin\Debug\netcoreapp2.0\Suave.OData.LiteDB.pdb
-d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB.Tests\obj\Debug\netcoreapp2.0\Suave.OData.LiteDB.Tests.dll
-d:\VsCode\FableApp\Server\Github\Suave.OData.LiteDB\Suave.OData.LiteDB.Tests\obj\Debug\netcoreapp2.0\Suave.OData.LiteDB.Tests.pdb
