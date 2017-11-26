@@ -1,16 +1,16 @@
 # Suave.OData.LiteDB
 An Experimental OData Implementation in Suave With LiteDB.FSharp 
-# Run Test
+## Run Test
 * cd Suave.OData.LiteDB.Tests
 * dotnet restore
 * dotnet run
-# Debug Test In VSCode
+## Debug Test In VSCode
 * cd Suave.OData.LiteDB.Tests
 * dotnet restore
 * Press F5 
-# NugetPackage
+## NugetPackage
 * https://www.nuget.org/packages/Suave.OData.LiteDB/
-# How to use it
+## How to use it
   ```fsharp
   [<EntryPoint>]
   let main _ =
