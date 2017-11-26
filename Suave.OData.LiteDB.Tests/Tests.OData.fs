@@ -10,6 +10,8 @@ open Suave
 open Suave.OData.LiteDB
 open Suave.OData.LiteDB.Json
 open System.Net.Http
+open Suave.Http
+open System.Net
 
 let useDatabase (f: LiteRepository -> WebPart) = 
     let mapper = FSharpBsonMapper()
@@ -22,24 +24,24 @@ let odataRouter() =
     db.Insert({Id=0;Name="test"})|>ignore
     db.Database.GetCollection<Company>().Insert({Id=0;Name="Hello"})|>ignore
     resource "odata/company" (db.Database.GetCollection<Company>()) |> OData.CRUD
-let runWithConfig = runWith defaultConfig
+let runWithConfig = runWith {defaultConfig with bindings=[HttpBinding.create HTTP IPAddress.Loopback 8081us ]}
   
 let ODataTests =
   testList "ODataTests" [
-    // testCase "OData GetById Test" <| fun _ -> 
-    //   let res=
-    //     runWithConfig <|odataRouter()
-    //     |>req GET "odata/company(1)" None
-    //     |>ofJson<Company>
-    //   Expect.equal res.Name  "test" "OData GetById Test Corrently"
-    // testCase "OData Add Entity Test" <| fun _ -> 
-    //   let newCompany={Id=0;Name="newCompany"}|>toJson
-    //   let data=new StringContent(newCompany)
-    //   let res=
-    //     runWithConfig <|odataRouter()
-    //     |>req POST "odata/company" (Some data)
-    //     |>ofJson<Company>
-    //   Expect.equal res.Name  "newCompany" "OData Add Entity Test Corrently"      
+    testCase "OData GetById Test" <| fun _ -> 
+      let res=
+        runWithConfig <|odataRouter()
+        |>req GET "odata/company(1)" None
+        |>ofJson<Company>
+      Expect.equal res.Name  "test" "OData GetById Test Corrently"
+    testCase "OData Add Entity Test" <| fun _ -> 
+      let newCompany={Id=0;Name="newCompany"}|>toJson
+      let data=new StringContent(newCompany)
+      let res=
+        runWithConfig <|odataRouter()
+        |>req POST "odata/company" (Some data)
+        |>ofJson<Company>
+      Expect.equal res.Name  "newCompany" "OData Add Entity Test Corrently"      
     testCase "OData Delete Entity Test" <| fun _ -> 
       let res=
         runWithConfig<| odataRouter()
