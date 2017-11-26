@@ -17,7 +17,7 @@ module Types =
     Add : 'a -> Async<'a option*exn>
     DeleteById : int -> Async<'a option>
     UpdateById : int -> 'a -> Async<'a option*exn>
-    // Entities : seq<'a>
+    Entities : seq<'a>
   }
 [<RequireQualifiedAccess>]
 module OData =
@@ -68,7 +68,7 @@ module OData =
           (resourcePath + "(%d)")
       choose [
         path resourcePath >=> choose
-          [
+          [GET >=> Filter resource.Entities
            POST >=> Create resource.Add]
         GET >=> pathScan resourceIdPath (FindById resource.FindById)
         DELETE >=> pathScan resourceIdPath (DeleteById resource.DeleteById)

@@ -10,7 +10,7 @@ module  Json =
 
     let private fsharpJsonConverter = FSharpJsonConverter()
     let private converters : JsonConverter[] = [| fsharpJsonConverter |]
-    let private toJson value =
+    let  toJson value =
         JsonConvert.SerializeObject(value, converters)
     let  ofJson<'a> (json:string) : 'a =
         JsonConvert.DeserializeObject<'a>(json, converters)   

@@ -55,6 +55,6 @@ module EfCrud =
         Add = addEntity col.Insert
         DeleteById = deleteEntityById findById deleteById
         UpdateById = updateEntity updateById
-        // Entities = dbSet
+        Entities = col.FindAll()
       }
   
