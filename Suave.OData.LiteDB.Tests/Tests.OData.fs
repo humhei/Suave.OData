@@ -39,6 +39,7 @@ let ODataTests =
          printfn "Dispose Context"
          disposeContext ctx
       else  printfn "NoNeed"
+      Thread.Sleep(2000)
       Expect.equal res.Name  "test" "OData GetById Test Corrently" 
     testCase "OData Add Entity Test" <| fun _ -> 
       let ctx=runWithConfig <|odataRouter()
@@ -52,6 +53,7 @@ let ODataTests =
          printfn "Dispose Context"
          disposeContext ctx
       else  printfn "NoNeed"
+      Thread.Sleep(2000)
       Expect.equal res.Name  "newCompany" "OData Add Entity Test Corrently"  
     testCase "OData Delete Entity Test" <| fun _ -> 
       let ctx=runWithConfig <|odataRouter()
@@ -63,6 +65,8 @@ let ODataTests =
          printfn "Dispose Context"
          disposeContext ctx      
       else  printfn "NoNeed"
+      Thread.Sleep(2000)
+
       Expect.equal res.Name  "Hello" "OData Delete Entity Test Corrently"  
     testCase "OData Update Entity Test" <| fun _ -> 
       let ctx=runWithConfig <|odataRouter()
@@ -77,6 +81,7 @@ let ODataTests =
          printfn "Dispose Context"
          disposeContext ctx      
       else  printfn "NoNeed"
+      Thread.Sleep(2000)
       Expect.equal res.Name  "updatedCompany" "OData Update Entity Test Corrently" 
     testCase "OData Filter Entity Test" <| fun _ -> 
       let ctx=runWithConfig <|odataRouter()
@@ -88,5 +93,7 @@ let ODataTests =
          printfn "Dispose Context"
          disposeContext ctx      
       else  printfn "NoNeed"
+      Thread.Sleep(2000)
+    
       Expect.equal res ["test";"Hello"] "OData Filter EntityTest Corrently"             
   ]
