@@ -30,21 +30,30 @@ let odataRouter() =
        resource "odata/order" (db.Database.GetCollection<Order>()) |> OData.CRUD
     ]
 //use different port to run test in parallel
-let runWithConfig port= 
+let mutable port=9000    
+let runWithConfig= 
+  port<-port+1
   runWith 
     {defaultConfig with 
       bindings = [ HttpBinding.createSimple HTTP "127.0.0.1" port ]}
 let ODataTests =
   testList "ODataTests" [
-    testCase "OData GetById Test" <| fun _ -> 
-      let ctx=runWithConfig 9001 <|odataRouter()
+    testCase "OData GetEntityById Test" <| fun _ -> 
+      let ctx=runWithConfig  <|odataRouter()
       let res=
        ctx
        |>req GET "odata/company(1)" None
        |>ofJson<Company>
       Expect.equal res.Name  "test" "OData GetById Test Corrently" 
+    // testCase "OData  $select Query Test" <| fun _ -> 
+    //   let ctx=runWithConfig  <|odataRouter()
+    //   let res=
+    //     ctx
+    //       |>req GET "odata/company" None
+    //       |>ofJson<list<string>> 
+    //   Expect.equal res ["test";"Hello"] "OData Filter EntityTest Corrently"         
     testCase "OData Add Entity Test" <| fun _ -> 
-      let ctx=runWithConfig 9002 <|odataRouter()
+      let ctx=runWithConfig <|odataRouter()
       let newCompany={Id=3;Name="newCompany"}|>toJson
       let data=new StringContent(newCompany)
       let res=
@@ -53,14 +62,14 @@ let ODataTests =
         |>ofJson<Company>
       Expect.equal res.Name  "newCompany" "OData Add Entity Test Corrently"  
     testCase "OData Delete Entity Test" <| fun _ -> 
-      let ctx=runWithConfig 9003 <|odataRouter()
+      let ctx=runWithConfig <|odataRouter()
       let res=
         ctx
         |>req DELETE "odata/company(2)" None
         |>ofJson<Company>
       Expect.equal res.Name  "Hello" "OData Delete Entity Test Corrently"  
     testCase "OData Update Entity Test" <| fun _ -> 
-      let ctx=runWithConfig 9004 <|odataRouter()
+      let ctx=runWithConfig <|odataRouter()
 
       let updatedCompany={Id=2;Name="updatedCompany"}|>toJson
       let data=new StringContent(updatedCompany)
@@ -70,17 +79,17 @@ let ODataTests =
           |>ofJson<Company>
       Expect.equal res.Name  "updatedCompany" "OData Update Entity Test Corrently" 
     testCase "OData  $select Query Test" <| fun _ -> 
-      let ctx=runWithConfig 9005 <|odataRouter()
+      let ctx=runWithConfig <|odataRouter()
       let res=
         ctx
           |>reqQuery GET "odata/company" "$select=Name"
           |>ofJson<list<string>> 
-      Expect.equal res ["test";"Hello"] "OData Filter EntityTest Corrently"        
-    testCase "OData  $expand entity Query Test" <| fun _ -> 
-      let ctx=runWithConfig 9006 <|odataRouter()
-      let res=
-        ctx
-          |>req GET "odata/order(1)" None
-          |>ofJson<Order> 
-      Expect.equal "Hello2" "Hello" "OData Filter EntityTest Corrently"                
+      Expect.equal res ["test";"Hello"] "OData Filter EntityTest Corrently"              
+    // testCase "OData  $expand entity Query Test" <| fun _ -> 
+    //   let ctx=runWithConfig<|odataRouter()
+    //   let res=
+    //     ctx
+    //       |>reqQuery GET "odata/order(1)" "$expand=Company"
+    //       |>ofJson<Order> 
+    //   Expect.equal "Hello2" "Hello" "OData Filter EntityTest Corrently"                
   ]
