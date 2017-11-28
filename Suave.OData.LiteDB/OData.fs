@@ -7,6 +7,7 @@ open Operators
 open ServerErrors
 open LiteDB.FSharp
 open Json
+open LiteDB
 /// A derivative of Suave.OData. Code adapted from Tamizh's origin
 //see https://goo.gl/JketNx
 [<AutoOpen>]
@@ -17,7 +18,7 @@ module Types =
     Add : 'a -> Async<'a option*exn>
     DeleteById : int -> Async<'a option>
     UpdateById : int -> 'a -> Async<'a option*exn>
-    Entities : seq<'a>
+    Entities : LiteCollection<'a>
   }
 [<RequireQualifiedAccess>]
 module OData =

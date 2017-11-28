@@ -10,21 +10,25 @@ open Suave
 open Suave.OData.LiteDB
 open Suave.OData.LiteDB.Json
 open System.Net.Http
-open Suave.Http
-open System.Net
-open System.Threading
-
+open LiteDB.FSharp.Help
 let useDatabase (f: LiteRepository -> WebPart) = 
     let mapper = FSharpBsonMapper()
+    mapper.Entity<Order>().DbRef(toLinq(<@fun c->c.Company@>))|>ignore
+    mapper.Entity<Order>().DbRef(toLinq(<@fun c->c.EOrders@>))|>ignore  
     let memoryStream = new MemoryStream()
     let db = new LiteRepository(memoryStream, mapper)
     f db
     
 let odataRouter() = 
   useDatabase<| fun db->
-    db.Insert({Id=0;Name="test"})|>ignore
-    db.Database.GetCollection<Company>().Insert({Id=0;Name="Hello"})|>ignore
-    resource "odata/company" (db.Database.GetCollection<Company>()) |> OData.CRUD
+    let c1={Id=1;Name="test"}
+    db.Insert(c1)|>ignore
+    db.Insert({Id=2;Name="Hello"})|>ignore
+    db.Insert({Id=1;Company=c1;EOrders=[]})|>ignore
+    choose[
+       resource "odata/company" (db.Database.GetCollection<Company>()) |> OData.CRUD
+       resource "odata/order" (db.Database.GetCollection<Order>()) |> OData.CRUD
+    ]
 //use different port to run test in parallel
 let runWithConfig port= 
   runWith 
@@ -41,7 +45,7 @@ let ODataTests =
       Expect.equal res.Name  "test" "OData GetById Test Corrently" 
     testCase "OData Add Entity Test" <| fun _ -> 
       let ctx=runWithConfig 9002 <|odataRouter()
-      let newCompany={Id=0;Name="newCompany"}|>toJson
+      let newCompany={Id=3;Name="newCompany"}|>toJson
       let data=new StringContent(newCompany)
       let res=
         ctx
@@ -65,17 +69,18 @@ let ODataTests =
           |>req PUT "odata/company(2)" (Some data)
           |>ofJson<Company>
       Expect.equal res.Name  "updatedCompany" "OData Update Entity Test Corrently" 
-    testCase "OData Filter Entity Test" <| fun _ -> 
+    testCase "OData  $select Query Test" <| fun _ -> 
       let ctx=runWithConfig 9005 <|odataRouter()
       let res=
         ctx
           |>reqQuery GET "odata/company" "$select=Name"
-          |>ofJson<list<string>>
-      if not ctx.cts.IsCancellationRequested then 
-         printfn "Dispose Context"
-         disposeContext ctx      
-      else  printfn "NoNeed"
-      Thread.Sleep(2000)
-    
-      Expect.equal res ["test";"Hello"] "OData Filter EntityTest Corrently"             
+          |>ofJson<list<string>> 
+      Expect.equal res ["test";"Hello"] "OData Filter EntityTest Corrently"        
+    testCase "OData  $expand entity Query Test" <| fun _ -> 
+      let ctx=runWithConfig 9006 <|odataRouter()
+      let res=
+        ctx
+          |>req GET "odata/order(1)" None
+          |>ofJson<Order> 
+      Expect.equal "Hello2" "Hello" "OData Filter EntityTest Corrently"                
   ]

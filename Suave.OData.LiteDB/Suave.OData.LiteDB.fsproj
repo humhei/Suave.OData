@@ -10,5 +10,8 @@
     <Compile Include="OData.fs" />
     <Compile Include="CRUD.fs" />
   </ItemGroup>
+    <ItemGroup>
+    <ProjectReference Include="..\..\LiteDB.FSharp\LiteDB.FSharp\LiteDB.FSharp.fsproj" />
+  </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

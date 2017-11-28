@@ -1,23 +1,25 @@
 # Suave.OData.LiteDB
-An Experimental OData Implementation in Suave With LiteDB.FSharp 
-### Run Test
-* cd Suave.OData.LiteDB.Tests
-* dotnet restore
-* dotnet run
-### Debug Test In VSCode
-* cd Suave.OData.LiteDB.Tests
-* dotnet restore
-* Press F5 
+An Experimental OData Implementation in Suave With [LiteDB.FSharp](https://github.com/Zaid-Ajaj/LiteDB.FSharp)
 ### NugetPackage
-* https://www.nuget.org/packages/Suave.OData.LiteDB/
-### How to use it
+* [Suave.OData.LiteDB](https://www.nuget.org/packages/Suave.OData.LiteDB/)
+### Usage
+  [Sample is available](https://github.com/humhei/Suave.OData.LiteDB.Samples)
+
   ```fsharp
+  open Suave
+  open LiteDB
+  open LiteDB.FSharp
+  open Suave.OData.LiteDB
+  type Company = {
+    Id: int
+    Name: string
+}
   [<EntryPoint>]
   let main _ =
     let mapper = FSharpBsonMapper()
     use memoryStream = new MemoryStream()
     use db = new LiteRepository(memoryStream, mapper)    
-    db.Insert(defaultCompany)
+    db.Insert({Id=1;Name="testCompany"})
     let odataRouter=resource "odata/company" (db.Database.GetCollection<Company>()) |> OData.CRUD
     let app=choose[
                      odataRouter
@@ -26,3 +28,14 @@ An Experimental OData Implementation in Suave With LiteDB.FSharp
     startWebServer defaultConfig app
     0 
   ```
+## Supported Opreations
+   Basic CRUD Opreations:Get,Add,Delete,Update
+   Query Opreations:$select
+### Run Test
+* cd Suave.OData.LiteDB.Tests
+* dotnet restore
+* dotnet run
+### Debug Test In VSCode
+* cd Suave.OData.LiteDB.Tests
+* dotnet restore
+* Press F5 
