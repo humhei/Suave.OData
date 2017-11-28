@@ -1,7 +1,7 @@
 # Suave.OData.LiteDB
 An Experimental OData Implementation in Suave With [LiteDB.FSharp](https://github.com/Zaid-Ajaj/LiteDB.FSharp)
 ### NugetPackage
-* [Suave.OData.LiteDB](https://www.nuget.org/packages/Suave.OData.LiteDB/)
+  [Suave.OData.LiteDB](https://www.nuget.org/packages/Suave.OData.LiteDB/)
 ### Usage
   [Sample is available](https://github.com/humhei/Suave.OData.LiteDB.Samples)
 
@@ -29,8 +29,8 @@ An Experimental OData Implementation in Suave With [LiteDB.FSharp](https://githu
     0 
   ```
 ## Supported Opreations
-   Basic CRUD Opreations:Get,Add,Delete,Update
-   Query Opreations:$select
+* Basic CRUD Opreations:Get,Add,Delete,Update
+* Query Opreations:$select
 ### Run Test
 * cd Suave.OData.LiteDB.Tests
 * dotnet restore
