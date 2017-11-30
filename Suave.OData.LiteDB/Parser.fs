@@ -1,32 +1,26 @@
 namespace Suave.OData.LiteDB
 open FParsec
 open LiteDB
-
+open Suave.Utils.AsyncExtensions
+open System.Collections.Generic
 [<RequireQualifiedAccess>]
 module ODataParser=
-    let private selelctQuery (dbSet:LiteCollection<_>)=
-      let str s = pstring s
-      let normalCharSnippet=manySatisfy isLetter
-      let keyLiteral=normalCharSnippet|>between (str "$") (str "=")
-      pipe2 keyLiteral normalCharSnippet (fun key value->
-        match key with
-        |"select"->dbSet.FindAll()
-                   |>Seq.map(fun n->
-                   n.GetType().GetProperty(value).GetValue(n))
-        |_->Seq.empty
-      )
-    // let private expandQuery (dbSet:LiteCollection<_>)=
-    //   let str s = pstring s
-    //   let normalCharSnippet=manySatisfy isLetter
-    //   let keyLiteral=normalCharSnippet|>between (str "$") (str "=")
-    //   pipe2 keyLiteral normalCharSnippet (fun key value->
-    //     match key with
-    //     |"expand"->dbSet
-    //                |>Seq.map(fun n->
-    //                n.GetType().GetProperty(value).GetValue(n))
-    //     |_->Seq.empty
-    //   )      
-    let filter (dbSet:LiteCollection<_>) queryStr=
-      match run (selelctQuery dbSet) queryStr with
-      |Success(result,_,_)->result
-      |Failure(errorMsg,_,_)->failwith (sprintf "Failure: %s" errorMsg)
+    let private select (dbSet:LiteCollection<_>) value=
+        dbSet.FindAll()
+            |>Seq.map(fun n->
+            n.GetType().GetProperty(value).GetValue(n))
+    let private expand (dbSet:LiteCollection<_>) value=
+    
+        dbSet.Include(value).FindAll()|>Seq.map(box)    
+    let private (|QueryAble|QueryDisable|) input= if Seq.isEmpty input then  QueryDisable else QueryAble
+
+    let filter (dbSet:LiteCollection<_>) (querydict:Map<string,string>)=
+      match querydict with 
+      |QueryDisable -> dbSet.FindAll()|>Seq.map(box)
+      |QueryAble -> 
+        let k,v=querydict|>Map.toSeq|>Seq.head
+        match k with
+          |"$select"-> select dbSet v
+          |"$expand"-> expand dbSet v
+          |_ -> failwith "Unexcepted query"
+

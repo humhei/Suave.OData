@@ -8,6 +8,7 @@ open ServerErrors
 open LiteDB.FSharp
 open Json
 open LiteDB
+open System.Collections.Generic
 /// A derivative of Suave.OData. Code adapted from Tamizh's origin
 //see https://goo.gl/JketNx
 [<AutoOpen>]
@@ -55,13 +56,19 @@ module OData =
     | None -> return! NOT_FOUND "" ctx   
   }  
   let Filter dbSet (ctx : HttpContext) = async {
-    let nv=ctx.request.query
-        |> List.filter (fun (k,v) -> k <> "" && Option.isSome v)
-        |> List.map(fun (k,v) -> k+"="+v.Value)
-    let filteredEntities = ODataParser.filter dbSet nv.[0]
+    let toMap dictionary = 
+      (dictionary :> seq<_>)
+      |> Seq.map (|KeyValue|)
+      |> Map.ofSeq
+    let dict=new Dictionary<string,string>()
+    ctx.request.query
+      |> List.filter (fun (k,v) -> k <> "" && Option.isSome v)
+      |> List.map(fun (k,v) ->dict.Add(k,v.Value))
+      |> ignore
+    let filteredEntities = ODataParser.filter dbSet (dict|>toMap)
     return!  JSON OK  filteredEntities ctx  
   }
-  let CRUD resource (ctx : HttpContext) = async {
+  let CRUD resource  (ctx : HttpContext) = async {
     let odata =
       let resourcePath = "/" + resource.Name
       let resourceIdPath =
@@ -77,4 +84,3 @@ module OData =
       ]
     return! odata ctx
    }
-   
