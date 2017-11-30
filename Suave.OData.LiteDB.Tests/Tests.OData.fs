@@ -11,85 +11,81 @@ open Suave.OData.LiteDB
 open Suave.OData.LiteDB.Json
 open System.Net.Http
 open LiteDB.FSharp.Help
-let useDatabase (f: LiteRepository -> WebPart) = 
-    let mapper = FSharpBsonMapper()
-    mapper.Entity<Order>().DbRef(toLinq(<@fun c->c.Company@>))|>ignore
-    mapper.Entity<Order>().DbRef(toLinq(<@fun c->c.EOrders@>))|>ignore  
-    let memoryStream = new MemoryStream()
-    let db = new LiteRepository(memoryStream, mapper)
-    f db
-    
-let odataRouter() = 
-  useDatabase<| fun db->
-    let c1={Id=1;Name="test"}
-    db.Insert(c1)|>ignore
-    db.Insert({Id=2;Name="Hello"})|>ignore
-    db.Insert({Id=1;Company=c1;EOrders=[]})|>ignore
-    choose[
-       resource "odata/company" (db.Database.GetCollection<Company>()) |> OData.CRUD
-       resource "odata/order" (db.Database.GetCollection<Order>()) |> OData.CRUD
-    ]
-//use different port to run test in parallel
+open FParsec.Internals
+let pass() = Expect.isTrue true "passed"
+let fail() = Expect.isTrue false "failed"
+//set port mutable to run test in parallel
 let mutable port=9000    
-let runWithConfig= 
+let runTestCtx()= 
+  let odataRouter() = 
+    let useDatabase (f: LiteRepository -> WebPart) = 
+      let mapper = FSharpBsonMapper()
+      mapper.Entity<Order>().DbRef(toLinq(<@fun c->c.Company@>))|>ignore
+      mapper.Entity<Order>().DbRef(toLinq(<@fun c->c.EOrders@>))|>ignore  
+      let memoryStream = new MemoryStream()
+      let db = new LiteRepository(memoryStream, mapper)
+      f db    
+    useDatabase<| fun db->
+      let c1={Id=1;Name="c1"}
+      db.Insert(c1)|>ignore
+      db.Insert({Id=2;Name="c2"})|>ignore
+      db.Insert({Id=1;Company=c1;EOrders=[]})|>ignore
+      choose[
+         resource "odata/company" (db.Database.GetCollection<Company>()) |> OData.CRUD
+         resource "odata/order" (db.Database.GetCollection<Order>()) |> OData.CRUD
+      ]
   port<-port+1
   runWith 
     {defaultConfig with 
-      bindings = [ HttpBinding.createSimple HTTP "127.0.0.1" port ]}
+      bindings = [ HttpBinding.createSimple HTTP "127.0.0.1" port ]} <|odataRouter()
+let toStringContent entity=entity|>toJson|>fun args->new StringContent(args)|>Some
+let (|IsEmpty|IsNonEmpty|) (input:seq<_>)=
+  if Seq.isEmpty input then IsEmpty else IsNonEmpty
+
 let ODataTests =
   testList "ODataTests" [
     testCase "OData GetEntityById Test" <| fun _ -> 
-      let ctx=runWithConfig  <|odataRouter()
-      let res=
-       ctx
+       runTestCtx()
        |>req GET "odata/company(1)" None
        |>ofJson<Company>
-      Expect.equal res.Name  "test" "OData GetById Test Corrently" 
-    // testCase "OData  $select Query Test" <| fun _ -> 
-    //   let ctx=runWithConfig  <|odataRouter()
-    //   let res=
-    //     ctx
-    //       |>req GET "odata/company" None
-    //       |>ofJson<list<string>> 
-    //   Expect.equal res ["test";"Hello"] "OData Filter EntityTest Corrently"         
+       |>function | {Id=1;Name="c1"}->pass()
+                  | _->fail()
+    testCase "OData GetEntities Test" <| fun _ -> 
+        runTestCtx()
+        |>req GET "odata/company" None
+        |>ofJson<list<Company>> 
+        |>function |IsNonEmpty->pass()
+                   |IsEmpty->fail()
     testCase "OData Add Entity Test" <| fun _ -> 
-      let ctx=runWithConfig <|odataRouter()
-      let newCompany={Id=3;Name="newCompany"}|>toJson
-      let data=new StringContent(newCompany)
-      let res=
-        ctx
-        |>req POST "odata/company" (Some data)
-        |>ofJson<Company>
-      Expect.equal res.Name  "newCompany" "OData Add Entity Test Corrently"  
+      runTestCtx()
+      |>req POST "odata/company" (toStringContent {Id=3;Name="newCompany"})
+      |>ofJson<Company>
+      |>function |{Id=3;Name="newCompany"}->pass()
+                 |_->fail()
     testCase "OData Delete Entity Test" <| fun _ -> 
-      let ctx=runWithConfig <|odataRouter()
-      let res=
-        ctx
+        runTestCtx()
         |>req DELETE "odata/company(2)" None
         |>ofJson<Company>
-      Expect.equal res.Name  "Hello" "OData Delete Entity Test Corrently"  
+        |>function | {Id=2;Name="c2"}->pass()
+                   | _->fail()
     testCase "OData Update Entity Test" <| fun _ -> 
-      let ctx=runWithConfig <|odataRouter()
-
-      let updatedCompany={Id=2;Name="updatedCompany"}|>toJson
-      let data=new StringContent(updatedCompany)
-      let res=
-        ctx
-          |>req PUT "odata/company(2)" (Some data)
-          |>ofJson<Company>
-      Expect.equal res.Name  "updatedCompany" "OData Update Entity Test Corrently" 
+      runTestCtx()
+        |>req PUT "odata/company(2)" (toStringContent {Id=2;Name="updatedCompany"}  )
+        |>ofJson<Company>
+        |>function | {Id=2;Name="updatedCompany"} ->pass()
+                   | _->fail()
     testCase "OData  $select Query Test" <| fun _ -> 
-      let ctx=runWithConfig <|odataRouter()
-      let res=
-        ctx
-          |>reqQuery GET "odata/company" "$select=Name"
-          |>ofJson<list<string>> 
-      Expect.equal res ["test";"Hello"] "OData Filter EntityTest Corrently"              
-    // testCase "OData  $expand entity Query Test" <| fun _ -> 
-    //   let ctx=runWithConfig<|odataRouter()
-    //   let res=
-    //     ctx
-    //       |>reqQuery GET "odata/order(1)" "$expand=Company"
-    //       |>ofJson<Order> 
-    //   Expect.equal "Hello2" "Hello" "OData Filter EntityTest Corrently"                
+      runTestCtx()
+        |>reqQuery GET "odata/company" "$select=Name"
+        |>ofJson<list<string>> 
+        |>function |IsNonEmpty->pass()
+                   |IsEmpty->fail()
+         
+    testCase "OData  $expand entity Query Test" <| fun _ -> 
+      runTestCtx()
+        |>reqQuery GET "odata/order" "$expand=Company"
+        |>ofJson<Order list> 
+        |>Seq.forall(fun c-> isNotNull (box c.Company))
+        |>function |true->pass()
+                   |false->fail()
   ]
