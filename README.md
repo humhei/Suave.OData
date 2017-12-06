@@ -1,9 +1,9 @@
 # Suave.OData.LiteDB
+[![Travis](https://img.shields.io/travis/humhei/Suave.OData.LiteDB.svg)](https://travis-ci.org/humhei/Suave.OData.LiteDB)
+[![NuGet](https://img.shields.io/nuget/v/Suave.OData.LiteDB.svg?colorB=Green)](https://www.nuget.org/packages/Suave.OData.LiteDB/)
 An Experimental OData Implementation in Suave With [LiteDB.FSharp]
 (https://github.com/Zaid-Ajaj/LiteDB.FSharp)
 > The library is experiemental and not production-ready. The Api is subject to change.
-### NugetPackage
-  [Suave.OData.LiteDB](https://www.nuget.org/packages/Suave.OData.LiteDB/)
 ### Usage
   [Sample is available](https://github.com/humhei/Suave.OData.LiteDB.Samples)
 
