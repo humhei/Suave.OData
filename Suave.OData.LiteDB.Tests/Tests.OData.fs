@@ -10,7 +10,7 @@ open Suave
 open Suave.OData.LiteDB
 open Suave.OData.LiteDB.Json
 open System.Net.Http
-open LiteDB.FSharp.Help
+open LiteDB.FSharp.Linq
 open FParsec.Internals
 let pass() = Expect.isTrue true "passed"
 let fail() = Expect.isTrue false "failed"
@@ -20,8 +20,8 @@ let runTestCtx()=
   let odataRouter() = 
     let useDatabase (f: LiteRepository -> WebPart) = 
       let mapper = FSharpBsonMapper()
-      mapper.Entity<Order>().DbRef(toLinq(<@fun c->c.Company@>))|>ignore
-      mapper.Entity<Order>().DbRef(toLinq(<@fun c->c.EOrders@>))|>ignore  
+      mapper.Entity<Order>().DbRef(convertExpr(<@fun c->c.Company@>))|>ignore
+      mapper.Entity<Order>().DbRef(convertExpr(<@fun c->c.EOrders@>))|>ignore  
       let memoryStream = new MemoryStream()
       let db = new LiteRepository(memoryStream, mapper)
       f db    
