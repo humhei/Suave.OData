@@ -1,5 +1,4 @@
 namespace Suave.OData.LiteDB
-open FParsec
 open LiteDB
 open Suave.Utils.AsyncExtensions
 open System.Collections.Generic
