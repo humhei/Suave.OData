@@ -2,16 +2,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <VersionPrefix>1.1.0</VersionPrefix>
+    <VersionPrefix>1.1.1</VersionPrefix>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Parser.fs" />
     <Compile Include="Json.fs" />
     <Compile Include="OData.fs" />
     <Compile Include="CRUD.fs" />
-  </ItemGroup>
-    <ItemGroup>
-    <ProjectReference Include="..\..\LiteDB.FSharp\LiteDB.FSharp\LiteDB.FSharp.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
